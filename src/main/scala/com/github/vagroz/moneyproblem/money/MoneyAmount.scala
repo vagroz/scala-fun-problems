@@ -40,6 +40,8 @@ class MoneyAmount private(_queue: Queue[Token]) {
   }
 
   lazy val getValue: BigDecimal = Calculator.solveReversePolishNotation(queue)
+
+  lazy val getInfixExpr: String = Calculator.makeInfixExpression(queue)
 }
 
 object MoneyAmount{
