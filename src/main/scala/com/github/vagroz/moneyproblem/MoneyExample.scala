@@ -4,14 +4,14 @@ import money.implicits._
 
 object MoneyExample extends App {
   val moneyAmount1 = (5.rub + 95.rub) * 4 / 5 + 20.5.rub * 2
-  println(moneyAmount1.getValue)      // 121.00
-  println(moneyAmount1.getInfixExpr)  // (5 + 95)*4/5 + 20.5*2
+  println(moneyAmount1.getDouble)     // 121.00
+  println(moneyAmount1.expression)    // (5 rub + 95 rub)*4/5 + (20.5 rub)*2
 
-  val moneyAmount2 = 1345.645.rub
-  println(moneyAmount2.getValue)      // 1345.65
-  println(moneyAmount2.getInfixExpr)  // 1345.645
+  val moneyAmount2 = 1345.645.usd / 1.usd
+  println(moneyAmount2.value)         // 1345.645
+  println(moneyAmount2.expression)    // (1345.65 usd)/(1 usd)
 
-  val moneyAmount3 = 10 * (2.01.rub / 2)
-  println(moneyAmount3.getValue)      // 10.05
-  println(moneyAmount3.getInfixExpr)  // 2.01/2*10
+  val moneyAmount3 = 10 * (2.01.rub / 2.rub)
+  println(moneyAmount3.value)         // 10.050
+  println(moneyAmount3.expression)    // 10*(2.01 rub)/(2 rub)
 }
