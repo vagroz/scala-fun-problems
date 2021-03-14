@@ -1,50 +1,33 @@
 package com.github.vagroz.moneyproblem.money
 import com.github.vagroz.moneyproblem.calculator._
 
-import scala.collection.immutable.Queue
 import scala.math.BigDecimal.RoundingMode
 
-class MoneyAmount private(_queue: Queue[Token]) {
-  private val queue: Queue[Token] = _queue
+final class MoneyAmount[C <: Currency] private[money](override val value: BigDecimal,
+                                                      val currency: C,
+                                                      override protected val priority: Int,
+                                                      override val expression: String) extends PrioritisedExpression {
+  lazy val getDouble: Double = value.setScale(2, RoundingMode.HALF_UP).toDouble
 
-  def +(that: MoneyAmount): MoneyAmount = {
-    new MoneyAmount(
-      queue
-        .enqueueAll(that.queue)
-        .enqueue(Tokens.Plus)
-    )
-  }
+  private val moneyAmount = PrioritisedExpression.moneyAmount(this)(currency) _
+  private val numericExpression = PrioritisedExpression.numericExpression(this) _
 
-  def -(that: MoneyAmount): MoneyAmount = {
-    new MoneyAmount(
-      queue
-        .enqueueAll(that.queue)
-        .enqueue(Tokens.Minus)
-    )
-  }
+  def +(that: MoneyAmount[C]): MoneyAmount[C] = moneyAmount(Tokens.Plus, that)
 
-  def /(that: BigDecimal): MoneyAmount = {
-    new MoneyAmount(
-      queue
-        .enqueue(Tokens.Value(that))
-        .enqueue(Tokens.Div)
-    )
-  }
+  def -(that: MoneyAmount[C]): MoneyAmount[C] = moneyAmount(Tokens.Minus, that)
 
-  def *(that: BigDecimal): MoneyAmount = {
-    new MoneyAmount(
-      queue
-        .enqueue(Tokens.Value(that))
-        .enqueue(Tokens.Mult)
-    )
-  }
+  def /(that: NumericExpression): MoneyAmount[C] = moneyAmount(Tokens.Div, that)
 
-  lazy val getValue: BigDecimal = Calculator.solveReversePolishNotation(queue)
+  def /(that: MoneyAmount[C]): NumericExpression = numericExpression(Tokens.Div, that)
 
-  lazy val getInfixExpr: String = Calculator.makeInfixExpression(queue)
+  def *(that: NumericExpression): MoneyAmount[C] = moneyAmount(Tokens.Mult, that)
 }
 
 object MoneyAmount{
-  def apply(value: BigDecimal): MoneyAmount =
-    new MoneyAmount(Queue(Tokens.Value(value.setScale(4, RoundingMode.HALF_UP))))
+  def apply[C <: Currency](value: BigDecimal, currency: C): MoneyAmount[C] = {
+    val valueRepr = value.setScale(2, RoundingMode.HALF_UP).underlying().stripTrailingZeros().toPlainString
+
+    new MoneyAmount(value.setScale(4, RoundingMode.HALF_UP), currency = currency,
+      priority = 5, expression = s"$valueRepr ${currency.entryName.toLowerCase}")
+  }
 }
